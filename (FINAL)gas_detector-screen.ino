@@ -16,10 +16,13 @@ int del = 55; //delay value
 const int mq2Pin   = A0;   // MQ-2 analog output
 const int ledPin   = 12;   // LED
 const int buzzerPin = 13;  // Active buzzer
-int threshold = 250;  // analog value, range 0–1023
+int warningThreshold = 250;  // analog value, range 0–1023
+int urgentThreshold = 400;
 int gasValue = 0;
+int displayGasValue = 0;
+unsigned long lastDisplayUpdate = 0;
+const unsigned long displayInterval = 500;
 
-bool updatingLevel = false;
 unsigned long levelStart = 0;
 
 bool beepBlinking = false;
@@ -45,50 +48,51 @@ void setup()
 void loop()
 {
 
-  if (gasValue > threshold) {
-    if (millis() - levelStart >= 200) { //causes screen refresh every 200ms
-      digitalWrite(ledPin, !digitalRead(ledPin));   // LED FLASH
-      digitalWrite(buzzerPin, !digitalRead(buzzerPin)); // Buzzer FLASH
-      levelStart = millis();
-      gasValue = analogRead(mq2Pin);
+  gasValue = analogRead(mq2Pin);
+
+  if (gasValue > warningThreshold) {
+    if (gasValue > urgentThreshold) {
+      if (millis() - levelStart >= 100) {
+        digitalWrite(ledPin, !digitalRead(ledPin));
+        digitalWrite(buzzerPin, HIGH);
+        levelStart = millis();
+      }
+    } else {
+      if (millis() - levelStart >= 500) {
+        digitalWrite(ledPin, !digitalRead(ledPin));
+        digitalWrite(buzzerPin, !digitalRead(buzzerPin));
+        levelStart = millis();
+      }
     }
   } else {
-    digitalWrite(ledPin, LOW);    // LED OFF
-    digitalWrite(buzzerPin, LOW);  // Buzzer OFF
+    digitalWrite(ledPin, LOW);
+    digitalWrite(buzzerPin, LOW);
   }
 
-
-  if (!updatingLevel) {
-    updatingLevel = true;
-    levelStart = millis();
+  if (millis() - lastDisplayUpdate >= displayInterval) { //causes screen refresh every 200ms
+    lastDisplayUpdate = millis();
+    displayGasValue = analogRead(mq2Pin);
   }
-
-
-  if (updatingLevel) {
-    if (millis() - levelStart >= 200) { //causes screen refresh every 200ms
-      levelStart = millis();
-      gasValue = analogRead(mq2Pin);
-    }
-  }
+  
 
   clearLEDs();
   pickDigit(1);
-  pickNumber((gasValue/1000)%10);
+  pickNumber((displayGasValue/1000)%10);
   delayMicroseconds(del);
  
   clearLEDs();
   pickDigit(2);
-  pickNumber((gasValue/100)%10);
+  pickNumber((displayGasValue/100)%10);
   delayMicroseconds(del);
  
   clearLEDs();
   pickDigit(3);
-  pickNumber((gasValue/10)%10);
+  pickNumber((displayGasValue/10)%10);
   delayMicroseconds(del);
  
   clearLEDs();
   pickDigit(4);
-  pickNumber((gasValue/1)%10);
+  pickNumber((displayGasValue/1)%10);
   delayMicroseconds(del);
 }
  
