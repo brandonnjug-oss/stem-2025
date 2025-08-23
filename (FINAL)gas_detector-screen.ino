@@ -27,13 +27,13 @@ const int d3 =5;
 const int d4 =11;
 
 //definition of other pins
-const int mq2Pin   = A0;    // MQ-2 analog output
-const int ledPin   = 12;    // LED
-const int buzzerPin = 13;   // active buzzer
+const int mq2Pin   = A0;    //MQ-2 analog output
+const int ledPin   = 12;    //LED
+const int buzzerPin = 13;   //active buzzer
 
 //setting the thresholds, analogue value range 0-1023
-int warningThreshold = 250;   // the value at or above which the warning sequence is activated
-int urgentThreshold = 450;    // the value at or above which the urgent sequence is activated
+int warningThreshold = 250;   //the value at or above which the warning sequence is activated
+int urgentThreshold = 450;    //the value at or above which the urgent sequence is activated
 
 int gasValue = 0;   //the value that comes from the MQ-2 sensor, used to activate the buzzer and LED
 
@@ -41,7 +41,7 @@ int gasValue = 0;   //the value that comes from the MQ-2 sensor, used to activat
 int displayGasValue = 0;                //the number shown on the display
 unsigned long lastDisplayUpdate = 0;    //tracks the last time the display was updated
 
-unsigned long lastAlarmToggle = 0;    //tracks the last time the buzzer and/or led was toggled
+unsigned long lastAlarmToggle = 0;      //tracks the last time the buzzer and/or led was toggled
 
 void setup()
 {
@@ -68,10 +68,10 @@ void loop()
 
   if (gasValue > warningThreshold) {
     if (gasValue > urgentThreshold) {
-      if (millis() - lastAlarmToggle >= 100) {        //causes the toggle to be every 100ms
-        digitalWrite(ledPin, !digitalRead(ledPin));   //toggles the LED on/off
-        digitalWrite(buzzerPin, HIGH);                //turns the buzzer on
-        lastAlarmToggle = millis();                   //sets the lastAlarmToggle to the current program run time
+      if (millis() - lastAlarmToggle >= 100) {              //causes the toggle to be every 100ms
+        digitalWrite(ledPin, !digitalRead(ledPin));         //toggles the LED on/off
+        digitalWrite(buzzerPin, HIGH);                      //turns the buzzer on
+        lastAlarmToggle = millis();                         //sets the lastAlarmToggle to the current program run time
       }
     } else {
       if (millis() - lastAlarmToggle >= 500) {              //causes the toggle to be every 500ms
