@@ -1,3 +1,18 @@
+/*
+    A
+   ---
+F |   | B
+  | G |
+   ---
+E |   | C
+  |   |
+   ---  . dec
+    D
+
+d1 - d4 is for digits 1 - 4
+*/
+
+//definition of pins for the screen
 const int a = 2;
 const int b = 6;
 const int c = 9;
@@ -11,25 +26,26 @@ const int d2 =4;
 const int d3 =5;
 const int d4 =11;
 
-int del = 55; //delay value
+//definition of other pins
+const int mq2Pin   = A0;    // MQ-2 analog output
+const int ledPin   = 12;    // LED
+const int buzzerPin = 13;   // active buzzer
 
-const int mq2Pin   = A0;   // MQ-2 analog output
-const int ledPin   = 12;   // LED
-const int buzzerPin = 13;  // Active buzzer
-int warningThreshold = 250;  // analog value, range 0–1023
-int urgentThreshold = 450;
-int gasValue = 0;
-int displayGasValue = 0;
-unsigned long lastDisplayUpdate = 0;
-const unsigned long displayInterval = 500;
+//setting the thresholds, analogue value range 0-1023
+int warningThreshold = 250;   // the value at or above which the warning sequence is activated
+int urgentThreshold = 450;    // the value at or above which the urgent sequence is activated
 
-unsigned long levelStart = 0;
+int gasValue = 0;   //the value that comes from the MQ-2 sensor, used to activate the buzzer and LED
 
-bool beepBlinking = false;
-unsigned long beepStart = 0;
+//defining the values used for display updating
+int displayGasValue = 0;                //the number shown on the display
+unsigned long lastDisplayUpdate = 0;    //tracks the last time the display was updated
+
+unsigned long lastAlarmToggle = 0;    //tracks the last time the buzzer and/or led was toggled
 
 void setup()
 {
+  //defines the digital pins as output
   pinMode(d1, OUTPUT);
   pinMode(d2, OUTPUT);
   pinMode(d3, OUTPUT);
@@ -48,52 +64,52 @@ void setup()
 void loop()
 {
 
-  gasValue = analogRead(mq2Pin);
+  gasValue = analogRead(mq2Pin);    //sets the gasValue to the reading from the MQ-2 sensor
 
   if (gasValue > warningThreshold) {
     if (gasValue > urgentThreshold) {
-      if (millis() - levelStart >= 100) {
-        digitalWrite(ledPin, !digitalRead(ledPin));
-        digitalWrite(buzzerPin, HIGH);
-        levelStart = millis();
+      if (millis() - lastAlarmToggle >= 100) {        //causes the toggle to be every 100ms
+        digitalWrite(ledPin, !digitalRead(ledPin));   //toggles the LED on/off
+        digitalWrite(buzzerPin, HIGH);                //turns the buzzer on
+        lastAlarmToggle = millis();                   //sets the lastAlarmToggle to the current program run time
       }
     } else {
-      if (millis() - levelStart >= 500) {
-        digitalWrite(ledPin, !digitalRead(ledPin));
-        digitalWrite(buzzerPin, !digitalRead(buzzerPin));
-        levelStart = millis();
+      if (millis() - lastAlarmToggle >= 500) {              //causes the toggle to be every 500ms
+        digitalWrite(ledPin, !digitalRead(ledPin));         //toggles the LED on/off
+        digitalWrite(buzzerPin, !digitalRead(buzzerPin));   //toggles the buzzer on/off
+        lastAlarmToggle = millis();                         //sets the lastAlarmToggle to the current program run time
       }
     }
   } else {
-    digitalWrite(ledPin, LOW);
-    digitalWrite(buzzerPin, LOW);
+    digitalWrite(ledPin, LOW);      //turns the LED off
+    digitalWrite(buzzerPin, LOW);   //turns the buzzer off
   }
 
-  if (millis() - lastDisplayUpdate >= displayInterval) { //causes screen refresh every 200ms
-    lastDisplayUpdate = millis();
-    displayGasValue = analogRead(mq2Pin);
+  if (millis() - lastDisplayUpdate >= 200) {    //causes screen refresh every 200ms
+    lastDisplayUpdate = millis();               //sets the lastDisplayUpdate to the current program run time
+    displayGasValue = analogRead(mq2Pin);       //sets the displayGasValue to the reading from the MQ-2 sensor
   }
   
-
+  //selects which number each digit of the screen should show
   clearLEDs();
-  pickDigit(1);
-  pickNumber((displayGasValue/1000)%10);
-  delayMicroseconds(del);
+  pickDigit(1);                             //picks the first digit on the display
+  pickNumber((displayGasValue/1000)%10);    //picks the forth digit of the number from the right
+  delayMicroseconds(55);                    //waits 55 microseconds before showing the next digit
  
   clearLEDs();
-  pickDigit(2);
-  pickNumber((displayGasValue/100)%10);
-  delayMicroseconds(del);
+  pickDigit(2);                             //picks the second digit on the display
+  pickNumber((displayGasValue/100)%10);     //picks the third digit of the number from the right
+  delayMicroseconds(55);                    //waits 55 microseconds before showing the next digit
  
   clearLEDs();
-  pickDigit(3);
-  pickNumber((displayGasValue/10)%10);
-  delayMicroseconds(del);
+  pickDigit(3);                             //picks the second digit on the display
+  pickNumber((displayGasValue/10)%10);      //picks the second digit of the number from the right
+  delayMicroseconds(55);                    //waits 55 microseconds before showing the next digit
  
   clearLEDs();
-  pickDigit(4);
-  pickNumber((displayGasValue/1)%10);
-  delayMicroseconds(del);
+  pickDigit(4);                             //picks the fourth digit on the display
+  pickNumber((displayGasValue/1)%10);       //picks the first digit of the number from the right
+  delayMicroseconds(55);                    //waits 55 microseconds before showing the next digit
 }
  
 void pickDigit(int x) //changes digit
@@ -157,7 +173,7 @@ void pickNumber(int x) //changes value of number
   }
 }
 
-//Determines how each digit looks
+//determines how each digit looks
 void clearLEDs()
 {
   digitalWrite(a, LOW);
